@@ -29,7 +29,7 @@ or >> docs,shingles = construct_set_shingles(docs,k,h=True)
 
 4. Choose a threshold t that defines how similar documents have to be.
 5. Construct candidate pairs by applying the LSH technique of Section 3.4.1.
-6. Examine each candidate pair's signatures and determine whether the fraction of components in which they agree is at least t. Pick a number of bands b and a number of rows r such that br = n, and the threshold t is approximately (1/b)^1/r #WARNING ==> b*r = n !!! Default b=4 and r=3.
+6. Examine each candidate pair's signatures and determine whether the fraction of components in which they agree is at least t. Pick a number of bands b and a number of rows r such that br = n, and the threshold t is approximately (1/b)^(1/r). Default b=4 and r=3.
 
 >> candidates,sort = apply_LSH_technique(SIG,0.7,b,r)
 
