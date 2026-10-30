@@ -21,3 +21,19 @@ def test_threshold_of_20_bands_of_5_rows_is_about_0_55():
 def test_choose_bands_picks_the_factorisation_of_n_closest_to_t(t, expected):
     # thresholds for n = 100: (50, 2) ≈ .14, (20, 5) ≈ .55, (10, 10) ≈ .79
     assert choose_bands(n=100, t=t) == expected
+
+
+@pytest.mark.parametrize(
+    "n, expected",
+    # P(candidate | s = 0.5) for n = 100: (25, 4) ≈ .80, (50, 2) ≈ 1.0
+    # and for n = 200: (40, 5) ≈ .72, (50, 4) ≈ .96
+    [(100, (50, 2)), (200, (50, 4))],
+)
+def test_min_recall_picks_the_highest_threshold_that_still_reaches_it(n, expected):
+    assert choose_bands(n=n, t=0.5, min_recall=0.95) == expected
+
+
+def test_unreachable_min_recall_is_an_error():
+    # n = 1 only allows b = r = 1, where P(candidate | s = t) = t.
+    with pytest.raises(ValueError, match="min_recall"):
+        choose_bands(n=1, t=0.5, min_recall=0.95)

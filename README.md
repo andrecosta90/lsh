@@ -35,6 +35,14 @@ uv run pytest
 
 `find_similar` chains them all.
 
+**Choosing `b` and `r`:** by default `choose_bands` picks the threshold closest to `t`,
+so a pair with similarity close to `t` is missed fairly often (with `n = 200, t = 0.5`
+it becomes a candidate only ~72% of the time). When false negatives are what you need
+to avoid, pass `min_recall=0.95`: this picks the highest threshold at which a pair of
+similarity `t` still becomes a candidate with probability ≥ 0.95, which costs more
+false positives for steps 6–7 to filter out. Step 6 itself compares a *noisy estimate*
+against `t`, so pairs right at `t` are still dropped about half the time.
+
 **Steps 2 and 3:** the algorithm in 3.3.5 scans the sorted rows of the characteristic
 matrix and keeps, for each hash function `h(x) = (a·x + b) mod p`, the smallest
 `h(row)` among the rows where the document has a 1. That minimum depends only on the
@@ -43,7 +51,7 @@ never builds the matrix.
 
 ## What was wrong with the 2013 version
 
-- **Shingle hash:** `sum(ord(c)) % 101` sends anagrams to the same value and allows only 101 values.
+- **Shingle hash** ([#1](https://github.com/andrecosta90/lsh/issues/1)): `sum(ord(c)) % 101` sends anagrams to the same value and allows only 101 values.
 - **Minhash functions:** used `mod n_rows` with `a ∈ [0, 1000]` (`a` could be 0), so they weren't permutations. Now `mod p` with `p = 2³¹ − 1` prime and `a ≥ 1`.
 - **Band hash:** `sum(band) % 101` ignored order and collided often. Bands now have to be identical.
 - **Buckets:** only the first two documents in a bucket were paired. Now every pair is.

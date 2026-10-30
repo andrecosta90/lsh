@@ -41,3 +41,8 @@ def test_results_are_ordered_from_most_to_least_similar():
     result = find_similar(docs, k=3, n=200, t=0.6, seed=0)
 
     assert [p.similarity for p in result] == pytest.approx([1.0, 7 / 9, 7 / 9])
+
+
+def test_min_recall_is_used_to_choose_bands():
+    with pytest.raises(ValueError, match="min_recall"):
+        find_similar(DOCS, k=3, n=1, t=0.5, seed=0, min_recall=0.95)

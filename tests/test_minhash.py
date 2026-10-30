@@ -26,3 +26,9 @@ def test_signature_agreement_estimates_jaccard_similarity():
 def test_empty_set_has_no_signature():
     with pytest.raises(ValueError, match="empty"):
         MinHasher(n=4, seed=1).signature(set())
+
+
+def test_anagram_shingles_are_different_rows():
+    # Issue #1: the 2013 shingle hash sum(ord(c)) % 101 sent anagrams to the same bucket.
+    minhasher = MinHasher(n=100, seed=1)
+    assert signature_similarity(minhasher.signature({"abc"}), minhasher.signature({"cba"})) == 0
