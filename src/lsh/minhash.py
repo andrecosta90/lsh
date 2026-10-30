@@ -1,7 +1,7 @@
 """Step 3 of MMDS 3.4.3: compress shingle sets into minhash signatures (3.3)."""
 
-from collections.abc import Iterable
 import zlib
+from collections.abc import Iterable
 
 import numpy as np
 

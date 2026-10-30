@@ -1,36 +1,51 @@
-Developed by Andre H. Costa Silva
-11/09/2013
+# lsh
 
-========================
+Finding similar documents with **Locality-Sensitive Hashing**, following section
+3.4.3 *Combining the Techniques* of
+[Mining of Massive Datasets](http://www.mmds.org/) (Leskovec, Rajaraman, Ullman).
 
-Source code based on: http://infolab.stanford.edu/~ullman/mmds.html
-3.4.3 Combining the Techiniques
-Mining of Massive Datasets
-Rajaraman,Leskovec,Ullman
+A rewrite of a 2013 attempt, kept in [`legacy/`](legacy/) for comparison.
 
-========================
+## Usage
 
-1. Pick a value of k and construct from each document the set of k-shingles. Optionally, hash the k-shingles to shorter bucket numbers;for this set 'h=True'. Default h=False.
+```python
+from lsh import find_similar
 
->> docs,shingles = construct_set_shingles(docs,k)
-or >> docs,shingles = construct_set_shingles(docs,k,h=True)
+docs = {"a": "eu conheco voce pessoalmente", "b": "conheco voce pessoalmente", "c": "fiz isso"}
+find_similar(docs, k=3, n=200, t=0.8, seed=0)
+# [SimilarPair(a='a', b='b', similarity=0.8846...)]
+```
 
-========================
-2. Sort the document-shingle pairs to order them by shingle.
+```sh
+uv run python examples/portuguese_sentences.py
+uv run pytest
+```
 
->> matrix = sort_document_shingle(docsChange,shingles)
+## The seven steps of 3.4.3 and where they live
 
-========================
-3. Pick a length 'n' for the minHash signatures. That is, pick 'n'randomly chosen hash functions. Default n = 12
+| Step | Book | Code |
+|---|---|---|
+| 1. Pick `k` and build each document's set of k-shingles, optionally hashed to 4 bytes | 3.2 | `shingling.shingles`, `minhash._row_number` |
+| 2. Sort document–shingle pairs by shingle | 3.3.5 | implicit, see below |
+| 3. Pick `n` and compute minhash signatures | 3.3.5 | `MinHasher` |
+| 4. Choose threshold `t`, then `b`, `r` with `b·r = n` and `t ≈ (1/b)^(1/r)` | 3.4.2 | `banding.choose_bands`, `threshold`, `candidate_probability` |
+| 5. Build candidate pairs with the banding technique | 3.4.1 | `LSHIndex` |
+| 6. Keep candidates whose signatures agree in at least a fraction `t` of components | 3.3.3 | `similarity.signature_similarity` |
+| 7. Optionally check the documents' real (Jaccard) similarity | 3.1.1 | `similarity.jaccard`, `find_similar(verify=True)` |
 
->> SIG = compute_minHash_signatures(matrix,n)
+`find_similar` chains them all.
 
-========================
+**Steps 2 and 3:** the algorithm in 3.3.5 scans the sorted rows of the characteristic
+matrix and keeps, for each hash function `h(x) = (a·x + b) mod p`, the smallest
+`h(row)` among the rows where the document has a 1. That minimum depends only on the
+document's set of shingles, so `MinHasher` computes it straight from the set and
+never builds the matrix.
 
-4. Choose a threshold t that defines how similar documents have to be.
-5. Construct candidate pairs by applying the LSH technique of Section 3.4.1.
-6. Examine each candidate pair's signatures and determine whether the fraction of components in which they agree is at least t. Pick a number of bands b and a number of rows r such that br = n, and the threshold t is approximately (1/b)^(1/r). Default b=4 and r=3.
+## What was wrong with the 2013 version
 
->> candidates,sort = apply_LSH_technique(SIG,0.7,b,r)
-
-========================
+- **Shingle hash:** `sum(ord(c)) % 101` sends anagrams to the same value and allows only 101 values.
+- **Minhash functions:** used `mod n_rows` with `a ∈ [0, 1000]` (`a` could be 0), so they weren't permutations. Now `mod p` with `p = 2³¹ − 1` prime and `a ≥ 1`.
+- **Band hash:** `sum(band) % 101` ignored order and collided often. Bands now have to be identical.
+- **Buckets:** only the first two documents in a bucket were paired. Now every pair is.
+- **Step 6:** compared signatures with cosine similarity. The book's measure is the fraction of agreeing components.
+- **Steps 4 and 7:** `b` and `r` weren't derived from `t`, and the documents were never checked.

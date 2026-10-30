@@ -7,7 +7,10 @@ requires-python = ">=3.12"
 dependencies = ["numpy>=1.26"]
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "pytest>=8",
+    "ruff>=0.17.3",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -18,3 +21,10 @@ packages = ["src/lsh"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["legacy"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
