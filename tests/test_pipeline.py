@@ -46,3 +46,10 @@ def test_results_are_ordered_from_most_to_least_similar():
 def test_min_recall_is_used_to_choose_bands():
     with pytest.raises(ValueError, match="min_recall"):
         find_similar(DOCS, k=3, n=1, t=0.5, seed=0, min_recall=0.95)
+
+
+def test_documents_shorter_than_k_are_reported_by_key():
+    docs = {"ok": "eu conheco voce", "d3": "oi", "d9": ""}
+
+    with pytest.raises(ValueError, match=r"shorter than k=3: \['d3', 'd9'\]"):
+        find_similar(docs, k=3, n=100, t=0.5, seed=0)

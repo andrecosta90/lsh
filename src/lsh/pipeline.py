@@ -36,6 +36,8 @@ def find_similar[K: Hashable](
     choosing bands (see ``choose_bands``).
     """
     shingle_sets = {key: shingles(text, k, lowercase=lowercase) for key, text in docs.items()}  # step 1
+    if too_short := [key for key, s in shingle_sets.items() if not s]:
+        raise ValueError(f"documents shorter than k={k}: {too_short}")
 
     minhasher = MinHasher(n, seed)  # steps 2-3
     signatures = {key: minhasher.signature(s) for key, s in shingle_sets.items()}
