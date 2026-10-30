@@ -1,0 +1,20 @@
+[project]
+name = "lsh"
+version = "0.1.0"
+description = "Locality-Sensitive Hashing for documents, following MMDS section 3.4.3"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["numpy>=1.26"]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lsh"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
